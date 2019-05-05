@@ -21,7 +21,7 @@ class MainServer {
     fun startProcess() : OutputStream {
         val process = ProcessBuilder()
             .directory(File("/gpt-2"))
-            .command("python3", "src/interactive_conditional_samples.py", "--top_k", "40", "--length", "200")
+            .command("python3", "src/interactive_conditional_samples.py", "--top_k", "40", "--length", "200", "--model_name", "345M")
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
 
