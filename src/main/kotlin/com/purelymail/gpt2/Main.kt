@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
+import kotlin.concurrent.thread
 
 fun main(){
     MainServer()
@@ -19,7 +20,7 @@ class MainServer {
     fun startProcess() : Process {
         val process = ProcessBuilder()
             .directory(File("/gpt-2"))
-            .command("python3", "src/bot_samples.py", "--top_k", "40", "--length", "200", "--model_name", "345M")
+            .command("python3", "src/bot_samples.py", "--top_k", "40", "--length", "200", "--model_name", "774M")
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
 
@@ -64,9 +65,21 @@ class MainServer {
                     if(event.message.contentStripped.startsWith("!gpt ") && event.author != discord.selfUser){
                         val prompt = event.message.contentStripped.removePrefix("!gpt ")
                         println("Got prompt: $prompt")
-                        val response = processRequest(prompt)
-                        println("Response: $response")
-                        event.channel.sendMessage("$prompt $response").queue()
+                        val typing = thread {
+                            try {
+                                while (true) {
+                                    event.channel.sendTyping().submit().get()
+                                    Thread.sleep(5000)
+                                }
+                            } catch(t : InterruptedException){}
+                        }
+                        try {
+                            val response = processRequest(prompt)
+                            println("Response: $response")
+                            event.channel.sendMessage("$prompt $response").queue()
+                        } finally {
+                            typing.interrupt()
+                        }
                     }
                 }
             })
