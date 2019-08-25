@@ -2,6 +2,7 @@ package com.purelymail.gpt2
 
 import net.dv8tion.jda.core.JDA
 import net.dv8tion.jda.core.JDABuilder
+import net.dv8tion.jda.core.MessageBuilder
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent
 import net.dv8tion.jda.core.hooks.ListenerAdapter
 import java.io.ByteArrayOutputStream
@@ -63,7 +64,7 @@ class MainServer {
             .addEventListener(object : ListenerAdapter() {
                 override fun onMessageReceived(event: MessageReceivedEvent) {
                     if(event.message.contentStripped.startsWith("!gpt ") && event.author != discord.selfUser){
-                        val prompt = event.message.contentStripped.removePrefix("!gpt ")
+                        val prompt = event.message.contentStripped.removePrefix("!gpt ").take(900)
                         println("Got prompt: $prompt")
                         val typing = thread {
                             try {
@@ -76,7 +77,11 @@ class MainServer {
                         try {
                             val response = processRequest(prompt)
                             println("Response: $response")
-                            event.channel.sendMessage("$prompt $response").queue()
+                            event.channel.sendMessage(MessageBuilder()
+                                .append(prompt, MessageBuilder.Formatting.BOLD)
+                                .append(response)
+                                .build()
+                            ).queue()
                         } finally {
                             typing.interrupt()
                         }
